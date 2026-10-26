@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
-import { formatId } from "./track.js";
-import type { FeaturedTrack, Track } from "./types.js";
+import { describeFormat, formatId } from "./track.js";
+import type { FeaturedTrack, Format, Track } from "./types.js";
+import { ok, findById } from "./api.js";
+import { addTrack, updateTrack, toPreview } from "./library.js";
 
 const libraryName = "Late Night Listening";
 
@@ -26,5 +28,35 @@ console.log(describeTrack(tracks[0]));
 tracks.forEach((t) => console.log(formatId(t.id)));
 console.log(`Featured: ${pick.title}, added ${pick.addedDate}`);
 
-const notes = readFileSync("notes.txt", "utf8");
+const notes = readFileSync("src/musicLibrary/notes.txt", "utf8");
 console.log(notes);
+
+console.log(describeFormat("vinyl"));
+
+const columns: (keyof Track)[] = ["title", "artist", "liked"];
+
+for (const track of tracks) {
+  console.log(columns.map((column) => track[column]).join(" | "));
+}
+
+const allTracks = ok(tracks);
+const featured = ok(pick);
+
+console.log(
+  `${allTracks.data.length} tracks, featured: ${featured.data.title}, picked by ${featured.data.curatedBy}`,
+);
+console.log(findById(tracks, 2)?.title);
+
+const ivy = addTrack({ title: "Ivy", artist: "Frank Ocean", liked: false });
+updateTrack(ivy.id, { liked: true });
+
+console.log(toPreview(ivy), ivy.liked);
+
+
+const formatCounts: Record<Format, number> = {
+  vinyl: 12,
+  cd: 30,
+  digital: 214,
+};
+
+console.log(formatCounts);
